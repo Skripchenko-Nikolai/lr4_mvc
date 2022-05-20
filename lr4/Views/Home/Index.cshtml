@@ -1,0 +1,66 @@
+﻿@{
+    ViewBag.Title = "Home Page";
+}
+ 
+<script src="https://maps.google.com/maps/api/js?sensor=true" type="text/javascript"></script>
+ 
+<style>
+.stationInfo {
+    height: 150px;    
+    width: 250px;
+}
+</style>
+ 
+<div id="canvas" style="height: 600px; width:600px;"></div>
+ 
+@section scripts {
+    <script type="text/javascript">
+ 
+    $(document).ready(function () {
+        GetMap();
+    });
+ 
+    function GetMap(callback) {
+ 
+        google.maps.visualRefresh = true;
+        let Abaza = new google.maps.LatLng(52.65, 90.08333);
+ 
+        let mapOptions = {
+            zoom: 15,
+            center: Abaza,
+            mapTypeId: google.maps.MapTypeId.G_NORMAL_MAP
+        };
+ 
+        let map = new google.maps.Map(document.getElementById("canvas"), mapOptions);
+
+ 
+        // Получаем данные
+        $.getJSON('@Url.Action("GetData", "Home")', function (data) {
+            console.log(data);
+            // Проходим по всем данным и устанавливаем для них маркеры
+            $.each(data, function (i, item) {
+                let position = new google.maps.LatLng(item.coords.lat, item.coords.lon);
+                let marker = new google.maps.Marker({
+                    position: position,
+                    map: map,
+                    title: item.name
+                });
+ 
+                // Берем для этих маркеров синие иконки с сайта google
+                marker.setIcon('https://maps.google.com/mapfiles/ms/icons/blue-dot.png')
+ 
+                // Для каждого объекта добавляем доп. информацию, выводимую в отдельном окне
+                let infowindow = new google.maps.InfoWindow({
+                    content: "<div class='stationInfo'><h2> Регион: " + item.subject +"</h2>" + "<h2>Округ: " + item.district + "</h2><div><h4>Город: "
+                        + item.name + "</h4></div><div><h5>Население: " + item.population + " млн. человек</h5></div></div>"
+                });
+ 
+                // обработчик нажатия на маркер объекта
+                marker.addListener('click', function () {
+                    infowindow.open(map, marker);
+                });
+            })
+        });
+    }
+</script>
+}
